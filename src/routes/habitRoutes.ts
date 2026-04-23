@@ -92,7 +92,7 @@ router.post(
 )
 
 // Tag-related endpoints
-router.get('/tag/:tagId', validateParams(tagIdSchema), getHabitsByTag)
+router.get('/tag/:tagId', [validateParams(tagIdSchema)], getHabitsByTag)
 router.post(
   '/:id/tags',
   validateParams(uuidSchema),
