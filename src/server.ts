@@ -1,11 +1,13 @@
 import express from 'express'
 import authRoutes from './routes/authRoutes.ts'
+import categoryRoutes from './routes/categoryRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
-import habitRoutes from './routes/habitRoutes.ts'
+import swaggerUi from 'swagger-ui-express'
 import cors from 'cors'
 import morgan from 'morgan'
 import helmet from 'helmet'
 import { isDev, isTest } from '../env.ts'
+import { openApiSpec } from './docs/openapi.ts'
 import { errorHandler } from './middleware/errorHandler.ts'
 
 const app = express()
@@ -24,9 +26,19 @@ app.get('/health', (req, res) => {
   res.status(200).json({ message: 'Server is healthy' })
 })
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ message: 'Server is healthy' })
+})
+
+app.get('/api/docs.json', (req, res) => {
+  res.status(200).json(openApiSpec)
+})
+
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec))
+
 app.use('/api/auth', authRoutes)
-app.use('/api/users', userRoutes)
-app.use('/api/habits', habitRoutes)
+app.use('/api/categories', categoryRoutes)
+app.use('/api/profile', userRoutes)
 
 app.use(
   (

@@ -1,7 +1,7 @@
 {
   "name": "api-design-v5",
   "version": "1.0.0",
-  "description": "Habit Tracker API for Node.js course",
+  "description": "Smart Library API",
   "main": "src/index.ts",
   "type": "module",
   "engines": {
@@ -20,7 +20,7 @@
     "db:seed": "node src/db/seed.ts"
   },
   "keywords": [
-    "habit-tracker",
+    "smart-library",
     "api",
     "nodejs",
     "express",
@@ -30,6 +30,7 @@
   "license": "ISC",
   "dependencies": {
     "@epic-web/remember": "^1.1.0",
+    "@types/swagger-ui-express": "^4.1.8",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "custom-env": "^2.0.6",
@@ -41,6 +42,7 @@
     "jose": "^6.0.12",
     "morgan": "^1.10.1",
     "pg": "^8.16.3",
+    "swagger-ui-express": "^5.0.1",
     "ts-node": "^10.9.2",
     "zod": "^4.3.6"
   },
