@@ -13,7 +13,12 @@ export const openApiSpec = {
       description: 'Local development server',
     },
   ],
-  tags: [{ name: 'Health' }, { name: 'Auth' }, { name: 'Profile' }, { name: 'Categories' }],
+  tags: [
+    { name: 'Health' },
+    { name: 'Auth' },
+    { name: 'Profile' },
+    { name: 'Categories' },
+  ],
   components: {
     securitySchemes: {
       bearerAuth: {
@@ -33,10 +38,9 @@ export const openApiSpec = {
       },
       AuthUser: {
         type: 'object',
-        required: ['id', 'fullName', 'firstName', 'lastName', 'email', 'role'],
+        required: ['id', 'firstName', 'lastName', 'email', 'role'],
         properties: {
           id: { type: 'string', format: 'uuid' },
-          fullName: { type: 'string' },
           firstName: { type: 'string' },
           lastName: { type: 'string' },
           email: { type: 'string', format: 'email' },
@@ -57,6 +61,28 @@ export const openApiSpec = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           name: { type: 'string' },
+        },
+      },
+      ChangePasswordBody: {
+        type: 'object',
+        required: ['currentPassword', 'newPassword'],
+        properties: {
+          currentPassword: {
+            type: 'string',
+            example: 'password123',
+          },
+          newPassword: {
+            type: 'string',
+            minLength: 8,
+            example: 'newPassword123',
+          },
+        },
+      },
+      MessageResponse: {
+        type: 'object',
+        required: ['message'],
+        properties: {
+          message: { type: 'string' },
         },
       },
     },
@@ -219,25 +245,30 @@ export const openApiSpec = {
       put: {
         tags: ['Profile'],
         summary: 'Change the authenticated user password',
+        description:
+          'Verifies the current password, hashes the new password, and updates the authenticated user.',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
           content: {
             'application/json': {
-              schema: {
-                type: 'object',
-                required: ['currentPassword', 'newPassword'],
-                properties: {
-                  currentPassword: { type: 'string' },
-                  newPassword: { type: 'string', minLength: 8 },
-                },
-              },
+              schema: { $ref: '#/components/schemas/ChangePasswordBody' },
             },
           },
         },
         responses: {
-          200: { description: 'Password changed' },
-          400: { description: 'Validation failed or current password is incorrect' },
+          200: {
+            description: 'Password changed',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/MessageResponse' },
+                example: { message: 'Password changed successfully' },
+              },
+            },
+          },
+          400: {
+            description: 'Validation failed or current password is incorrect',
+          },
           401: { description: 'Missing or invalid token' },
           404: { description: 'User not found' },
         },

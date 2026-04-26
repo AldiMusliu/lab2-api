@@ -17,18 +17,16 @@ const seed = async () => {
 
     await db.insert(users).values([
       {
-        fullName: 'Library Admin',
-        firstName: 'Library',
+        firstName: 'Aldi',
         lastName: 'Admin',
-        email: 'admin@library.local',
+        email: 'aldi@admin.com',
         passwordHash,
         role: 'admin',
       },
       {
-        fullName: 'Alex Reader',
-        firstName: 'Alex',
+        firstName: 'Aldi',
         lastName: 'Reader',
-        email: 'user@library.local',
+        email: 'aldi@user.com',
         passwordHash,
         role: 'user',
       },
@@ -44,8 +42,8 @@ const seed = async () => {
     ])
 
     console.log('Smart Library DB seeded successfully')
-    console.log('admin@library.local / password123')
-    console.log('user@library.local / password123')
+    console.log('aldi@admin.com / password123')
+    console.log('aldi@user.com / password123')
   } catch (error) {
     console.error('Seed failed', error)
     process.exit(1)

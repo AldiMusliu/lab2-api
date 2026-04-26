@@ -22,7 +22,6 @@ describe('Authentication Endpoints', () => {
 
       expect(response.body).toHaveProperty('accessToken')
       expect(response.body.user).toMatchObject({
-        fullName: 'Alex Reader',
         firstName: 'Alex',
         lastName: 'Reader',
         role: 'user',
@@ -110,7 +109,6 @@ describe('Authentication Endpoints', () => {
 
       expect(response.body).toMatchObject({
         id: user.id,
-        fullName: user.fullName,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,

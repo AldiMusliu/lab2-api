@@ -48,7 +48,6 @@ Response `201`:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
     "firstName": "Alex",
     "lastName": "Reader",
     "email": "alex@example.com",
@@ -77,7 +76,6 @@ Response `200`:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
     "firstName": "Alex",
     "lastName": "Reader",
     "email": "alex@example.com",
@@ -115,7 +113,6 @@ Profile responses return:
 ```json
 {
   "id": "user-id",
-  "fullName": "Alex Reader",
   "firstName": "Alex",
   "lastName": "Reader",
   "email": "alex@example.com"

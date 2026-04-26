@@ -7,7 +7,6 @@ import { comparePasswords, hashPassword } from '../utils/password.ts'
 
 const toProfile = (user: User) => ({
   id: user.id,
-  fullName: user.fullName,
   firstName: user.firstName,
   lastName: user.lastName,
   email: user.email,
@@ -37,12 +36,10 @@ export const updateProfile = async (
 ) => {
   try {
     const { firstName, lastName } = req.body
-    const fullName = `${firstName} ${lastName}`.trim()
 
     const [user] = await db
       .update(users)
       .set({
-        fullName,
         firstName,
         lastName,
         updatedAt: new Date(),

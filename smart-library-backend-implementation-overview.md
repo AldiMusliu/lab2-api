@@ -256,7 +256,8 @@ Target fields:
 
 ```text
 id
-fullName
+firstName
+lastName
 email
 passwordHash
 role: "admin" | "user"
@@ -284,7 +285,8 @@ Frontend user shape:
 ```ts
 type AuthUser = {
   id: string
-  fullName: string
+  firstName: string
+  lastName: string
   email: string
   role: 'admin' | 'user'
 }
@@ -432,7 +434,8 @@ Auth responses:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
+    "firstName": "Alex",
+    "lastName": "Reader",
     "email": "alex@example.com",
     "role": "user"
   }
@@ -552,7 +555,7 @@ tests/setup/globalSetup.ts
 
 Work:
 
-- Replace the current user shape with `fullName`, `email`, `passwordHash`, and `role`.
+- Replace the current user shape with `firstName`, `lastName`, `email`, `passwordHash`, and `role`.
 - Add `role` to JWT payload.
 - Add `requireRole('admin')` middleware.
 - Replace `/sign-up` and `/sign-in` with `/register` and `/login`.
@@ -565,7 +568,7 @@ Work:
 Prompt to use:
 
 ```text
-Implement Part 1 of the Smart Library backend: auth foundation. Use smart-library-backend-implementation-overview.md as the guide. Keep the existing Express, Drizzle, Zod, JWT, bcrypt, and test patterns, but change users to fullName/email/passwordHash/role, update auth routes to /register, /login, /me, /logout, add role-aware JWT payloads, add requireRole middleware, and update tests.
+Implement Part 1 of the Smart Library backend: auth foundation. Use smart-library-backend-implementation-overview.md as the guide. Keep the existing Express, Drizzle, Zod, JWT, bcrypt, and test patterns, but change users to firstName/lastName/email/passwordHash/role, update auth routes to /register, /login, /me, /logout, add role-aware JWT payloads, add requireRole middleware, and update tests.
 ```
 
 Done when:
@@ -723,7 +726,7 @@ tests/dashboard.test.ts
 Work:
 
 - Move profile routes from `/api/users/profile` to `/api/profile/me`.
-- Allow users to update `fullName`.
+- Allow users to update `firstName` and `lastName`.
 - Keep email changes optional and carefully validated.
 - Add admin-only dashboard stats.
 - Count books, borrowings, active users, and overdue borrowings.

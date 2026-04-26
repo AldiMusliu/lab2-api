@@ -23,7 +23,6 @@ export type UserRole = "admin" | "user"
 
 export type AuthUser = {
   id: string
-  fullName: string
   firstName: string
   lastName: string
   email: string
@@ -49,7 +48,6 @@ export type LoginBody = {
 
 export type Profile = {
   id: string
-  fullName: string
   firstName: string
   lastName: string
   email: string
@@ -97,7 +95,6 @@ Response:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
     "firstName": "Alex",
     "lastName": "Reader",
     "email": "alex@example.com",
@@ -168,7 +165,6 @@ Profile response:
 ```json
 {
   "id": "user-id",
-  "fullName": "Alex Reader",
   "firstName": "Alex",
   "lastName": "Reader",
   "email": "alex@example.com"
@@ -319,8 +315,7 @@ export const deleteCategory = (id: string) =>
 
 ## Integration Checklist
 
-- Replace register form `fullName` input with `firstName` and `lastName`.
-- Keep displaying `user.fullName` where a single display name is needed.
+- Use `${user.firstName} ${user.lastName}` where a single display name is needed.
 - Persist `accessToken` after login/register.
 - Add the bearer token in the shared API client.
 - Load `/auth/me` on app startup when a token exists.

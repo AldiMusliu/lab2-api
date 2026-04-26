@@ -119,7 +119,8 @@ Fields:
 | Field | Type | Notes |
 |---|---|---|
 | `id` | UUID/string | Primary key |
-| `fullName` | string | Required |
+| `firstName` | string | Required |
+| `lastName` | string | Required |
 | `email` | string | Required, unique |
 | `passwordHash` | string | Required, never return to frontend |
 | `role` | enum | `"admin"` or `"user"` |
@@ -131,7 +132,8 @@ Frontend shape:
 ```ts
 type AuthUser = {
   id: string
-  fullName: string
+  firstName: string
+  lastName: string
   email: string
   role: "admin" | "user"
 }
@@ -341,7 +343,8 @@ Body:
 
 ```json
 {
-  "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com",
   "password": "password123"
 }
@@ -354,7 +357,8 @@ Response:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
+    "firstName": "Alex",
+    "lastName": "Reader",
     "email": "alex@example.com",
     "role": "user"
   }
@@ -383,7 +387,8 @@ Response:
   "accessToken": "jwt-token",
   "user": {
     "id": "user-id",
-    "fullName": "Alex Reader",
+    "firstName": "Alex",
+    "lastName": "Reader",
     "email": "alex@example.com",
     "role": "user"
   }
@@ -402,7 +407,8 @@ Response:
 ```json
 {
   "id": "user-id",
-  "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com",
   "role": "user"
 }
@@ -796,7 +802,8 @@ Response:
 ```json
 {
   "id": "user-id",
-  "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com"
 }
 ```
@@ -812,7 +819,8 @@ Body:
 
 ```json
 {
-  "fullName": "Alex Reader"
+  "firstName": "Alex",
+  "lastName": "Reader"
 }
 ```
 
@@ -821,7 +829,8 @@ Response:
 ```json
 {
   "id": "user-id",
-  "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com"
 }
 ```
@@ -881,7 +890,7 @@ Important validation:
 
 - `email` must be valid and unique
 - `password` should be at least 8 characters
-- `fullName` is required
+- `firstName` and `lastName` are required
 - `role` must be `"admin"` or `"user"`
 - category `name` is required and unique
 - book `title`, `author`, `categoryId`, `language`, `description`, and `coverImage` are required
