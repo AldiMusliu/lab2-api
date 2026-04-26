@@ -6,24 +6,32 @@ import { hashPassword } from '../../src/utils/password.ts'
 export async function createTestUser(
   userData: Partial<{
     fullName: string
+    firstName: string
+    lastName: string
     email: string
     password: string
     role: UserRole
   }> = {},
 ) {
   const defaultData = {
-    fullName: 'Test User',
+    firstName: 'Test',
+    lastName: 'User',
     email: `test-${Date.now()}-${Math.random()}@example.com`,
     password: 'TestPassword123!',
     role: 'user' as UserRole,
     ...userData,
   }
+  const fullName =
+    defaultData.fullName ??
+    `${defaultData.firstName} ${defaultData.lastName}`.trim()
 
   const passwordHash = await hashPassword(defaultData.password)
   const [user] = await db
     .insert(users)
     .values({
-      fullName: defaultData.fullName,
+      fullName,
+      firstName: defaultData.firstName,
+      lastName: defaultData.lastName,
       email: defaultData.email,
       passwordHash,
       role: defaultData.role,

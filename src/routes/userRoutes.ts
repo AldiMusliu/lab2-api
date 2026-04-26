@@ -7,7 +7,8 @@ import { validateBody } from '../middleware/validation.ts'
 const router = Router()
 
 const updateProfileSchema = z.object({
-  fullName: z.string().trim().min(1, 'Full name is required').max(120),
+  firstName: z.string().trim().min(1, 'First name is required').max(60),
+  lastName: z.string().trim().min(1, 'Last name is required').max(60),
 })
 
 router.use(authenticateToken)

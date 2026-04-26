@@ -9,6 +9,8 @@ import type { AuthenticatedRequest } from '../middleware/auth.ts'
 const toAuthUser = (user: User) => ({
   id: user.id,
   fullName: user.fullName,
+  firstName: user.firstName,
+  lastName: user.lastName,
   email: user.email,
   role: user.role,
 })
@@ -42,13 +44,16 @@ const isUniqueViolation = (error: unknown) => {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { fullName, email, password } = req.body
+    const { firstName, lastName, email, password } = req.body
+    const fullName = `${firstName} ${lastName}`.trim()
     const passwordHash = await hashPassword(password)
 
     const [user] = await db
       .insert(users)
       .values({
         fullName,
+        firstName,
+        lastName,
         email,
         passwordHash,
         role: 'user',

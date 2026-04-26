@@ -18,12 +18,16 @@ const seed = async () => {
     await db.insert(users).values([
       {
         fullName: 'Library Admin',
+        firstName: 'Library',
+        lastName: 'Admin',
         email: 'admin@library.local',
         passwordHash,
         role: 'admin',
       },
       {
         fullName: 'Alex Reader',
+        firstName: 'Alex',
+        lastName: 'Reader',
         email: 'user@library.local',
         passwordHash,
         role: 'user',

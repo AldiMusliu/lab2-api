@@ -13,7 +13,8 @@ describe('Authentication Endpoints', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          fullName: 'Alex Reader',
+          firstName: 'Alex',
+          lastName: 'Reader',
           email: `test-${Date.now()}@example.com`,
           password: 'TestPassword123!',
         })
@@ -22,6 +23,8 @@ describe('Authentication Endpoints', () => {
       expect(response.body).toHaveProperty('accessToken')
       expect(response.body.user).toMatchObject({
         fullName: 'Alex Reader',
+        firstName: 'Alex',
+        lastName: 'Reader',
         role: 'user',
       })
       expect(response.body.user).not.toHaveProperty('passwordHash')
@@ -31,7 +34,8 @@ describe('Authentication Endpoints', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          fullName: 'Alex Reader',
+          firstName: 'Alex',
+          lastName: 'Reader',
           email: 'invalid-email',
           password: 'TestPassword123!',
         })
@@ -46,7 +50,8 @@ describe('Authentication Endpoints', () => {
       const response = await request(app)
         .post('/api/auth/register')
         .send({
-          fullName: 'Duplicate User',
+          firstName: 'Duplicate',
+          lastName: 'User',
           email: user.email,
           password: 'TestPassword123!',
         })
@@ -71,6 +76,8 @@ describe('Authentication Endpoints', () => {
       expect(response.body).toHaveProperty('accessToken')
       expect(response.body.user).toMatchObject({
         id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
       })
@@ -104,6 +111,8 @@ describe('Authentication Endpoints', () => {
       expect(response.body).toMatchObject({
         id: user.id,
         fullName: user.fullName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
       })

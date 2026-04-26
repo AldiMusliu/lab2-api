@@ -34,7 +34,8 @@ Body:
 
 ```json
 {
-  "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com",
   "password": "password123"
 }
@@ -48,6 +49,8 @@ Response `201`:
   "user": {
     "id": "user-id",
     "fullName": "Alex Reader",
+    "firstName": "Alex",
+    "lastName": "Reader",
     "email": "alex@example.com",
     "role": "user"
   }
@@ -75,6 +78,8 @@ Response `200`:
   "user": {
     "id": "user-id",
     "fullName": "Alex Reader",
+    "firstName": "Alex",
+    "lastName": "Reader",
     "email": "alex@example.com",
     "role": "user"
   }
@@ -99,7 +104,8 @@ Update body:
 
 ```json
 {
-  "fullName": "Alex Reader"
+  "firstName": "Alex",
+  "lastName": "Reader"
 }
 ```
 
@@ -109,6 +115,8 @@ Profile responses return:
 {
   "id": "user-id",
   "fullName": "Alex Reader",
+  "firstName": "Alex",
+  "lastName": "Reader",
   "email": "alex@example.com"
 }
 ```

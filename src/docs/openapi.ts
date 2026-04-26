@@ -33,10 +33,12 @@ export const openApiSpec = {
       },
       AuthUser: {
         type: 'object',
-        required: ['id', 'fullName', 'email', 'role'],
+        required: ['id', 'fullName', 'firstName', 'lastName', 'email', 'role'],
         properties: {
           id: { type: 'string', format: 'uuid' },
           fullName: { type: 'string' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
           email: { type: 'string', format: 'email' },
           role: { type: 'string', enum: ['admin', 'user'] },
         },
@@ -91,9 +93,10 @@ export const openApiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['fullName', 'email', 'password'],
+                required: ['firstName', 'lastName', 'email', 'password'],
                 properties: {
-                  fullName: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
                   email: { type: 'string', format: 'email' },
                   password: { type: 'string', minLength: 8 },
                 },
@@ -196,9 +199,10 @@ export const openApiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['fullName'],
+                required: ['firstName', 'lastName'],
                 properties: {
-                  fullName: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
                 },
               },
             },
