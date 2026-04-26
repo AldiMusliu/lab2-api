@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import { verifyToken, type JwtPayload } from '../utils/jwt.ts'
 
 export interface AuthenticatedRequest extends Request {
@@ -11,17 +11,16 @@ export const authenticateToken = async (
   next: NextFunction,
 ) => {
   try {
-    const authHeader = req.headers['authorization']
-    const token = authHeader && authHeader.split(' ')[1]
-    if (!token) {
-      return res.status(401).json({ error: 'Bad request' })
+    const authHeader = req.headers.authorization
+    const [scheme, token] = authHeader?.split(' ') ?? []
+
+    if (scheme !== 'Bearer' || !token) {
+      return res.status(401).json({ error: 'Unauthorized' })
     }
-    const payload = await verifyToken(token)
-    req.user = payload
+
+    req.user = await verifyToken(token)
     next()
-  } catch (e) {
-    return res.status(403).json({
-      error: 'Forbidden',
-    })
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized' })
   }
 }
