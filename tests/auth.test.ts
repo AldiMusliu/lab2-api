@@ -1,116 +1,128 @@
 import request from 'supertest'
 import app from '../src/server.ts'
-import { afterEach } from 'vitest'
-import { createTestUser, cleanupDatabase } from './helpers/dbHelpers.ts'
+import { afterEach, describe, expect, it } from 'vitest'
+import { cleanupDatabase, createTestUser } from './helpers/dbHelpers.ts'
 
 describe('Authentication Endpoints', () => {
   afterEach(async () => {
     await cleanupDatabase()
   })
-  describe('POST /api/auth/sign-up', () => {
-    it('should register a new user with valid data', async () => {
-      const userData = {
-        email: `test-${Date.now()}@example.com`,
-        username: `testuser-${Date.now()}`,
-        password: 'TestPassword123!',
-        firstName: 'Test',
-        lastName: 'User',
-      }
 
+  describe('POST /api/auth/register', () => {
+    it('registers a new user with valid data', async () => {
       const response = await request(app)
-        .post('/api/auth/sign-up')
-        .send(userData)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Alex Reader',
+          email: `test-${Date.now()}@example.com`,
+          password: 'TestPassword123!',
+        })
         .expect(201)
 
-      expect(response.body).toHaveProperty('message', 'User created')
-      expect(response.body).toHaveProperty('user')
-      expect(response.body).toHaveProperty('token')
-      expect(response.body.user).not.toHaveProperty('password')
+      expect(response.body).toHaveProperty('accessToken')
+      expect(response.body.user).toMatchObject({
+        fullName: 'Alex Reader',
+        role: 'user',
+      })
+      expect(response.body.user).not.toHaveProperty('passwordHash')
     })
 
-    it('should return 400 for invalid email', async () => {
-      const userData = {
-        email: 'invalid-email',
-        username: `testuser-${Date.now()}`,
-        password: 'TestPassword123!',
-      }
-
+    it('returns 400 for invalid email', async () => {
       const response = await request(app)
-        .post('/api/auth/sign-up')
-        .send(userData)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Alex Reader',
+          email: 'invalid-email',
+          password: 'TestPassword123!',
+        })
         .expect(400)
 
       expect(response.body).toHaveProperty('error', 'Validation failed')
     })
 
-    it('should return 400 for short password', async () => {
-      const userData = {
-        email: `test-${Date.now()}@example.com`,
-        username: `testuser-${Date.now()}`,
-        password: 'short',
-      }
+    it('returns 409 for duplicate email', async () => {
+      const { user } = await createTestUser()
 
       const response = await request(app)
-        .post('/api/auth/sign-up')
-        .send(userData)
-        .expect(400)
+        .post('/api/auth/register')
+        .send({
+          fullName: 'Duplicate User',
+          email: user.email,
+          password: 'TestPassword123!',
+        })
+        .expect(409)
 
-      expect(response.body).toHaveProperty('error', 'Validation failed')
+      expect(response.body).toHaveProperty('error', 'Conflict')
     })
   })
 
-  describe('POST /api/auth/sign-in', () => {
-    it('should login with valid credentials', async () => {
-      // Create a test user first
-      const { user, rawPassword } = await createTestUser({
-        email: `test-${Date.now()}@example.com`,
-        password: 'TestPassword123!',
-      })
+  describe('POST /api/auth/login', () => {
+    it('logs in with valid credentials', async () => {
+      const { user, rawPassword } = await createTestUser()
 
-      const credentials = {
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: user.email,
+          password: rawPassword,
+        })
+        .expect(200)
+
+      expect(response.body).toHaveProperty('accessToken')
+      expect(response.body.user).toMatchObject({
+        id: user.id,
         email: user.email,
-        password: rawPassword,
-      }
-
-      const response = await request(app)
-        .post('/api/auth/sign-in')
-        .send(credentials)
-        .expect(201)
-
-      expect(response.body).toHaveProperty('message', 'Sign in successfully')
-      expect(response.body).toHaveProperty('user')
-      expect(response.body).toHaveProperty('token')
-      expect(response.body.user).not.toHaveProperty('password')
+        role: user.role,
+      })
+      expect(response.body.user).not.toHaveProperty('passwordHash')
     })
 
-    it('should return 400 for missing email', async () => {
-      const credentials = {
-        password: 'TestPassword123!',
-      }
-
-      const response = await request(app)
-        .post('/api/auth/sign-in')
-        .send(credentials)
-        .expect(400)
-
-      expect(response.body).toHaveProperty('error', 'Validation failed')
-    })
-
-    it('should return 401 for invalid credentials', async () => {
-      // Create a test user first
+    it('returns 401 for invalid credentials', async () => {
       const { user } = await createTestUser()
 
-      const credentials = {
-        email: user.email,
-        password: 'wrongpassword',
-      }
-
       const response = await request(app)
-        .post('/api/auth/sign-in')
-        .send(credentials)
+        .post('/api/auth/login')
+        .send({
+          email: user.email,
+          password: 'wrongpassword',
+        })
         .expect(401)
 
-      expect(response.body).toHaveProperty('error')
+      expect(response.body).toHaveProperty('error', 'Invalid credentials')
+    })
+  })
+
+  describe('GET /api/auth/me', () => {
+    it('returns the current authenticated user', async () => {
+      const { user, accessToken } = await createTestUser()
+
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+
+      expect(response.body).toMatchObject({
+        id: user.id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      })
+      expect(response.body).not.toHaveProperty('passwordHash')
+    })
+
+    it('returns 401 without a bearer token', async () => {
+      await request(app).get('/api/auth/me').expect(401)
+    })
+  })
+
+  describe('POST /api/auth/logout', () => {
+    it('returns 204 for an authenticated user', async () => {
+      const { accessToken } = await createTestUser()
+
+      await request(app)
+        .post('/api/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(204)
     })
   })
 })

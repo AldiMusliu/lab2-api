@@ -1,77 +1,49 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { db } from './connection.ts'
-import { users, habits, entries, tags, habitTags } from './schema.ts'
+import { categories, users } from './schema.ts'
 import { hashPassword } from '../utils/password.ts'
 
 const seed = async () => {
-  console.log('🌱 Starting database seed....')
+  console.log('Starting Smart Library database seed...')
 
   try {
-    console.log('Clearing existing data....')
-    await db.delete(entries)
-    await db.delete(habitTags)
-    await db.delete(habits)
-    await db.delete(tags)
+    console.log('Clearing existing data...')
+    await db.delete(categories)
     await db.delete(users)
 
-    console.log('creating demo users...')
-    const hashtedPassword = await hashPassword('demoPassword')
-    const [demoUser] = await db
-      .insert(users)
-      .values({
-        email: 'demo@app.com',
-        password: hashtedPassword,
-        firstName: 'demo',
-        lastName: 'person',
-        username: 'demo',
-      })
-      .returning()
+    console.log('Creating demo users...')
+    const passwordHash = await hashPassword('password123')
 
-    console.log('Creating tags...')
-    const [healthTag] = await db
-      .insert(tags)
-      .values({ name: 'Health', color: '#f0f0f0' })
-      .returning()
+    await db.insert(users).values([
+      {
+        fullName: 'Library Admin',
+        email: 'admin@library.local',
+        passwordHash,
+        role: 'admin',
+      },
+      {
+        fullName: 'Alex Reader',
+        email: 'user@library.local',
+        passwordHash,
+        role: 'user',
+      },
+    ])
 
-    const [exerciseHabit] = await db
-      .insert(habits)
-      .values({
-        userId: demoUser.id,
-        name: 'Exercise',
-        description: 'Daily workout',
-        frequency: 'daily',
-        targetCount: 1,
-      })
-      .returning()
+    console.log('Creating categories...')
+    await db.insert(categories).values([
+      { name: 'Software Engineering' },
+      { name: 'Data & AI' },
+      { name: 'Product Design' },
+      { name: 'Business & Leadership' },
+      { name: 'Modern Fiction' },
+    ])
 
-    await db.insert(habitTags).values({
-      habitId: exerciseHabit.id,
-      tagId: healthTag.id,
-    })
-
-    console.log('Adding completion entries....')
-
-    const today = new Date()
-    today.setHours(12, 0, 0, 0)
-
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today)
-      date.setDate(date.getDate() - i)
-
-      await db.insert(entries).values({
-        habitId: exerciseHabit.id,
-        completionDate: date,
-      })
-    }
-
-    console.log('✅ DB seeded successfully')
-    console.log('user credentials:')
-    console.log(`email: ${demoUser.email}`)
-    console.log(`username: ${demoUser.username}`)
-    console.log(`password: ${demoUser.password}`)
-  } catch (e) {
-    console.error('❌ seed failed', e)
+    console.log('Smart Library DB seeded successfully')
+    console.log('admin@library.local / password123')
+    console.log('user@library.local / password123')
+  } catch (error) {
+    console.error('Seed failed', error)
     process.exit(1)
   }
 }
@@ -83,7 +55,7 @@ const isDirectRun =
 if (isDirectRun) {
   seed()
     .then(() => process.exit(0))
-    .catch((e) => process.exit(1))
+    .catch(() => process.exit(1))
 }
 
 export default seed

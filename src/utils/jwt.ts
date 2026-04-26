@@ -1,16 +1,19 @@
-import { jwtVerify, SignJWT, type JWTPayload } from 'jose'
 import { createSecretKey } from 'crypto'
+import { jwtVerify, SignJWT, type JWTPayload } from 'jose'
 import env from '../../env.ts'
+import type { UserRole } from '../db/schema.ts'
 
 export interface JwtPayload extends JWTPayload {
   id: string
+  userId: string
   email: string
-  username: string
+  role: UserRole
 }
 
-export const generateToken = (payload: JwtPayload): Promise<string> => {
-  const secret = env.JWT_SECRET
-  const secretKey = createSecretKey(secret, 'utf-8')
+export type TokenPayloadInput = Pick<JwtPayload, 'userId' | 'email' | 'role'>
+
+export const generateToken = (payload: TokenPayloadInput): Promise<string> => {
+  const secretKey = createSecretKey(env.JWT_SECRET, 'utf-8')
 
   return new SignJWT(payload)
     .setProtectedHeader({
@@ -24,10 +27,13 @@ export const generateToken = (payload: JwtPayload): Promise<string> => {
 export const verifyToken = async (token: string): Promise<JwtPayload> => {
   const secretKey = createSecretKey(env.JWT_SECRET, 'utf-8')
   const { payload } = await jwtVerify(token, secretKey)
+  const userId = payload.userId as string
 
   return {
-    id: payload.id as string,
+    ...payload,
+    id: userId,
+    userId,
     email: payload.email as string,
-    username: payload.username as string,
+    role: payload.role as UserRole,
   }
 }

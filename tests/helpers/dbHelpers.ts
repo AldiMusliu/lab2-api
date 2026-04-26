@@ -1,75 +1,51 @@
 import { db } from '../../src/db/connection.ts'
-import { users, habits, entries } from '../../src/db/schema.ts'
-import { hashPassword } from '../../src/utils/password.ts'
+import { categories, users, type UserRole } from '../../src/db/schema.ts'
 import { generateToken } from '../../src/utils/jwt.ts'
+import { hashPassword } from '../../src/utils/password.ts'
 
 export async function createTestUser(
   userData: Partial<{
+    fullName: string
     email: string
-    username: string
     password: string
-    firstName: string
-    lastName: string
+    role: UserRole
   }> = {},
 ) {
   const defaultData = {
+    fullName: 'Test User',
     email: `test-${Date.now()}-${Math.random()}@example.com`,
-    username: `testuser-${Date.now()}-${Math.random()}`,
     password: 'TestPassword123!',
-    firstName: 'Test',
-    lastName: 'User',
+    role: 'user' as UserRole,
     ...userData,
   }
 
-  const hashedPassword = await hashPassword(defaultData.password)
+  const passwordHash = await hashPassword(defaultData.password)
   const [user] = await db
     .insert(users)
     .values({
-      ...defaultData,
-      password: hashedPassword,
+      fullName: defaultData.fullName,
+      email: defaultData.email,
+      passwordHash,
+      role: defaultData.role,
     })
     .returning()
 
-  const token = await generateToken({
-    id: user.id,
+  const accessToken = await generateToken({
+    userId: user.id,
     email: user.email,
-    username: user.username,
+    role: user.role,
   })
 
-  return { user, token, rawPassword: defaultData.password }
+  return { user, accessToken, rawPassword: defaultData.password }
 }
 
-export async function createTestHabit(
-  userId: string,
-  habitData: Partial<{
-    name: string
-    description: string
-    frequency: string
-    targetCount: number
-  }> = {},
-) {
-  const defaultData = {
-    name: `Test Habit ${Date.now()}`,
-    description: 'A test habit',
-    frequency: 'daily',
-    targetCount: 1,
-    ...habitData,
-  }
+export async function createTestCategory(name = `Category ${Date.now()}`) {
+  const [category] = await db.insert(categories).values({ name }).returning()
 
-  const [habit] = await db
-    .insert(habits)
-    .values({
-      userId,
-      ...defaultData,
-    })
-    .returning()
-
-  return habit
+  return category
 }
 
 export async function cleanupDatabase() {
-  // Clean up in the right order due to foreign key constraints
-  await db.delete(entries)
-  await db.delete(habits)
+  await db.delete(categories)
   await db.delete(users)
 }
