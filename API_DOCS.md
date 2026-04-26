@@ -98,6 +98,7 @@ POST /auth/logout
 ```http
 GET /profile/me
 PUT /profile/me
+PUT /profile/me/password
 ```
 
 Update body:
@@ -118,6 +119,23 @@ Profile responses return:
   "firstName": "Alex",
   "lastName": "Reader",
   "email": "alex@example.com"
+}
+```
+
+Change password body:
+
+```json
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword123"
+}
+```
+
+Successful password changes return:
+
+```json
+{
+  "message": "Password changed successfully"
 }
 ```
 

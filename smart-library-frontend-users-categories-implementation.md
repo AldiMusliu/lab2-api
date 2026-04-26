@@ -60,6 +60,11 @@ export type UpdateProfileBody = {
   lastName: string
 }
 
+export type ChangePasswordBody = {
+  currentPassword: string
+  newPassword: string
+}
+
 export type Category = {
   id: string
   name: string
@@ -146,6 +151,7 @@ The backend returns `204`. The frontend should clear the local token and auth st
 ```http
 GET /profile/me
 PUT /profile/me
+PUT /profile/me/password
 ```
 
 Update body:
@@ -166,6 +172,23 @@ Profile response:
   "firstName": "Alex",
   "lastName": "Reader",
   "email": "alex@example.com"
+}
+```
+
+Change password body:
+
+```json
+{
+  "currentPassword": "password123",
+  "newPassword": "newPassword123"
+}
+```
+
+Successful password change response:
+
+```json
+{
+  "message": "Password changed successfully"
 }
 ```
 
@@ -268,6 +291,12 @@ export const updateProfile = (body: UpdateProfileBody) =>
     body: JSON.stringify(body),
   })
 
+export const changePassword = (body: ChangePasswordBody) =>
+  apiRequest<{ message: string }>("/profile/me/password", {
+    method: "PUT",
+    body: JSON.stringify(body),
+  })
+
 export const getCategories = () => apiRequest<Category[]>("/categories")
 
 export const createCategory = (body: { name: string }) =>
@@ -295,5 +324,6 @@ export const deleteCategory = (id: string) =>
 - Persist `accessToken` after login/register.
 - Add the bearer token in the shared API client.
 - Load `/auth/me` on app startup when a token exists.
+- Add a profile password form that submits `currentPassword` and `newPassword`.
 - Use `user.role === "admin"` to show category create/update/delete controls.
 - Fetch categories from `/categories` anywhere filters or book forms need category options.

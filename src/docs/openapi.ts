@@ -215,6 +215,34 @@ export const openApiSpec = {
         },
       },
     },
+    '/api/profile/me/password': {
+      put: {
+        tags: ['Profile'],
+        summary: 'Change the authenticated user password',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['currentPassword', 'newPassword'],
+                properties: {
+                  currentPassword: { type: 'string' },
+                  newPassword: { type: 'string', minLength: 8 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Password changed' },
+          400: { description: 'Validation failed or current password is incorrect' },
+          401: { description: 'Missing or invalid token' },
+          404: { description: 'User not found' },
+        },
+      },
+    },
     '/api/categories': {
       get: {
         tags: ['Categories'],
