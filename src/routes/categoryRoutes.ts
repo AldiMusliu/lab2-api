@@ -23,16 +23,16 @@ const uuidSchema = z.object({
 
 router.get('/', listCategories)
 router.get('/:id', validateParams(uuidSchema), getCategoryById)
+
+router.use(authenticateToken)
 router.post(
   '/',
-  authenticateToken,
   requireRole('admin'),
   validateBody(categorySchema),
   createCategory,
 )
 router.put(
   '/:id',
-  authenticateToken,
   requireRole('admin'),
   validateParams(uuidSchema),
   validateBody(categorySchema),
@@ -40,7 +40,6 @@ router.put(
 )
 router.delete(
   '/:id',
-  authenticateToken,
   requireRole('admin'),
   validateParams(uuidSchema),
   deleteCategory,
