@@ -172,9 +172,56 @@ Create/update body:
 
 Create/update responses return the category directly. Delete returns `204`.
 
+## Books
+
+```http
+GET /books
+GET /books/:id
+```
+
+Optional list query params:
+
+```text
+q, categoryId, availability=available|online|waitlist|all, sort=title|author|newest|copies, page, pageSize
+```
+
+Book responses return the frontend shape directly:
+
+```json
+{
+  "id": "book-id",
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "categoryId": "category-id",
+  "availableCopies": 4,
+  "totalCopies": 6,
+  "publishedYear": 2008,
+  "language": "English",
+  "pages": 464,
+  "isbn": "9780132350884",
+  "shelfLocation": "A2-SW-014",
+  "formats": ["Print", "E-book"],
+  "readOnline": true,
+  "description": "A practical guide...",
+  "tags": ["Refactoring", "Testing"],
+  "coverImage": "https://example.com/cover.jpg",
+  "coverTone": "teal"
+}
+```
+
+Admin-only write routes:
+
+```http
+POST /books
+PUT /books/:id
+DELETE /books/:id
+```
+
+Create/update uses the same book fields without `id`. Delete returns `204`.
+
 ## Demo Seed Accounts
 
 ```text
-admin@library.local / password123
-user@library.local / password123
+aldi@admin.com / password123
+aldi@user.com / password123
 ```

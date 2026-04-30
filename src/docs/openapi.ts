@@ -5,7 +5,8 @@ export const openApiSpec = {
   info: {
     title: 'Smart Library API',
     version: '1.0.0',
-    description: 'Smart Library backend API for auth, profiles, and categories.',
+    description:
+      'Smart Library backend API for auth, profiles, categories, and books.',
   },
   servers: [
     {
@@ -18,6 +19,7 @@ export const openApiSpec = {
     { name: 'Auth' },
     { name: 'Profile' },
     { name: 'Categories' },
+    { name: 'Books' },
   ],
   components: {
     securitySchemes: {
@@ -61,6 +63,87 @@ export const openApiSpec = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           name: { type: 'string' },
+        },
+      },
+      Book: {
+        type: 'object',
+        required: [
+          'id',
+          'title',
+          'author',
+          'categoryId',
+          'availableCopies',
+          'totalCopies',
+          'publishedYear',
+          'language',
+          'pages',
+          'isbn',
+          'shelfLocation',
+          'formats',
+          'readOnline',
+          'description',
+          'tags',
+          'coverImage',
+          'coverTone',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          title: { type: 'string' },
+          author: { type: 'string' },
+          categoryId: { type: 'string', format: 'uuid' },
+          availableCopies: { type: 'integer', minimum: 0 },
+          totalCopies: { type: 'integer', minimum: 1 },
+          publishedYear: { type: 'integer' },
+          language: { type: 'string' },
+          pages: { type: 'integer', minimum: 1 },
+          isbn: { type: 'string' },
+          shelfLocation: { type: 'string' },
+          formats: {
+            type: 'array',
+            items: { type: 'string', enum: ['Print', 'E-book', 'Audiobook'] },
+          },
+          readOnline: { type: 'boolean' },
+          description: { type: 'string' },
+          tags: { type: 'array', items: { type: 'string' } },
+          coverImage: { type: 'string' },
+          coverTone: { type: 'string' },
+        },
+      },
+      BookInput: {
+        type: 'object',
+        required: [
+          'title',
+          'author',
+          'categoryId',
+          'availableCopies',
+          'totalCopies',
+          'publishedYear',
+          'language',
+          'pages',
+          'formats',
+          'description',
+          'coverImage',
+        ],
+        properties: {
+          title: { type: 'string' },
+          author: { type: 'string' },
+          categoryId: { type: 'string', format: 'uuid' },
+          availableCopies: { type: 'integer', minimum: 0 },
+          totalCopies: { type: 'integer', minimum: 1 },
+          publishedYear: { type: 'integer' },
+          language: { type: 'string' },
+          pages: { type: 'integer', minimum: 1 },
+          isbn: { type: 'string' },
+          shelfLocation: { type: 'string' },
+          formats: {
+            type: 'array',
+            items: { type: 'string', enum: ['Print', 'E-book', 'Audiobook'] },
+          },
+          readOnline: { type: 'boolean' },
+          description: { type: 'string' },
+          tags: { type: 'array', items: { type: 'string' } },
+          coverImage: { type: 'string' },
+          coverTone: { type: 'string' },
         },
       },
       ChangePasswordBody: {
@@ -271,6 +354,159 @@ export const openApiSpec = {
           },
           401: { description: 'Missing or invalid token' },
           404: { description: 'User not found' },
+        },
+      },
+    },
+    '/api/books': {
+      get: {
+        tags: ['Books'],
+        summary: 'List books',
+        parameters: [
+          { name: 'q', in: 'query', schema: { type: 'string' } },
+          {
+            name: 'categoryId',
+            in: 'query',
+            schema: { type: 'string', format: 'uuid' },
+          },
+          {
+            name: 'availability',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['available', 'online', 'waitlist', 'all'],
+            },
+          },
+          {
+            name: 'sort',
+            in: 'query',
+            schema: {
+              type: 'string',
+              enum: ['title', 'author', 'newest', 'copies'],
+            },
+          },
+          { name: 'page', in: 'query', schema: { type: 'integer' } },
+          { name: 'pageSize', in: 'query', schema: { type: 'integer' } },
+        ],
+        responses: {
+          200: {
+            description: 'Books returned',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Book' },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['Books'],
+        summary: 'Create a book',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BookInput' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Book created',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Book' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          409: { description: 'Duplicate ISBN' },
+        },
+      },
+    },
+    '/api/books/{id}': {
+      get: {
+        tags: ['Books'],
+        summary: 'Get a book',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Book returned',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Book' },
+              },
+            },
+          },
+          404: { description: 'Book not found' },
+        },
+      },
+      put: {
+        tags: ['Books'],
+        summary: 'Update a book',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BookInput' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Book updated',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Book' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          404: { description: 'Book not found' },
+          409: { description: 'Duplicate ISBN' },
+        },
+      },
+      delete: {
+        tags: ['Books'],
+        summary: 'Delete a book',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          204: { description: 'Book deleted' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          404: { description: 'Book not found' },
+          409: { description: 'Book is still referenced' },
         },
       },
     },

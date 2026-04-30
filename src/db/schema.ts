@@ -1,8 +1,22 @@
-import { relations } from 'drizzle-orm'
-import { pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { relations, sql } from 'drizzle-orm'
+import {
+  boolean,
+  check,
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 
 export const userRoleEnum = pgEnum('user_role', ['admin', 'user'])
+export const bookFormatValues = ['Print', 'E-book', 'Audiobook'] as const
+
+export type BookFormat = (typeof bookFormatValues)[number]
 
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -22,16 +36,72 @@ export const categories = pgTable('categories', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 })
 
+export const books = pgTable(
+  'books',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: varchar('title', { length: 255 }).notNull(),
+    author: varchar('author', { length: 255 }).notNull(),
+    categoryId: uuid('category_id')
+      .notNull()
+      .references(() => categories.id, { onDelete: 'restrict' }),
+    availableCopies: integer('available_copies').notNull(),
+    totalCopies: integer('total_copies').notNull(),
+    publishedYear: integer('published_year').notNull(),
+    language: varchar('language', { length: 80 }).notNull(),
+    pages: integer('pages').notNull(),
+    isbn: varchar('isbn', { length: 32 }).unique(),
+    shelfLocation: varchar('shelf_location', { length: 80 })
+      .default('')
+      .notNull(),
+    formats: jsonb('formats')
+      .$type<BookFormat[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    readOnline: boolean('read_online').default(false).notNull(),
+    description: text('description').notNull(),
+    tags: jsonb('tags').$type<string[]>().default(sql`'[]'::jsonb`).notNull(),
+    coverImage: varchar('cover_image', { length: 1000 }).notNull(),
+    coverTone: varchar('cover_tone', { length: 40 }).default('').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    check(
+      'books_available_copies_nonnegative',
+      sql`${table.availableCopies} >= 0`,
+    ),
+    check('books_total_copies_positive', sql`${table.totalCopies} >= 1`),
+    check(
+      'books_available_copies_lte_total',
+      sql`${table.availableCopies} <= ${table.totalCopies}`,
+    ),
+    check('books_pages_positive', sql`${table.pages} >= 1`),
+  ],
+)
+
 export const userRelations = relations(users, () => ({}))
-export const categoryRelations = relations(categories, () => ({}))
+export const categoryRelations = relations(categories, ({ many }) => ({
+  books: many(books),
+}))
+export const bookRelations = relations(books, ({ one }) => ({
+  category: one(categories, {
+    fields: [books.categoryId],
+    references: [categories.id],
+  }),
+}))
 
 export type UserRole = (typeof userRoleEnum.enumValues)[number]
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
 export type Category = typeof categories.$inferSelect
 export type NewCategory = typeof categories.$inferInsert
+export type Book = typeof books.$inferSelect
+export type NewBook = typeof books.$inferInsert
 
 export const insertUserSchema = createInsertSchema(users)
 export const selectUserSchema = createSelectSchema(users)
 export const insertCategorySchema = createInsertSchema(categories)
 export const selectCategorySchema = createSelectSchema(categories)
+export const insertBookSchema = createInsertSchema(books)
+export const selectBookSchema = createSelectSchema(books)

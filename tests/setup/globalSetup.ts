@@ -7,6 +7,7 @@ const resetDatabase = async () => {
   await db.execute(sql`DROP TABLE IF EXISTS entries CASCADE`)
   await db.execute(sql`DROP TABLE IF EXISTS habits CASCADE`)
   await db.execute(sql`DROP TABLE IF EXISTS tags CASCADE`)
+  await db.execute(sql`DROP TABLE IF EXISTS books CASCADE`)
   await db.execute(sql`DROP TABLE IF EXISTS categories CASCADE`)
   await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`)
   await db.execute(sql`DROP TYPE IF EXISTS user_role CASCADE`)

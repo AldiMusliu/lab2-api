@@ -28,6 +28,25 @@ const isUniqueViolation = (error: unknown) => {
   )
 }
 
+const isForeignKeyViolation = (error: unknown) => {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  if ('code' in error && error.code === '23503') {
+    return true
+  }
+
+  const cause = 'cause' in error ? error.cause : undefined
+
+  return (
+    typeof cause === 'object' &&
+    cause !== null &&
+    'code' in cause &&
+    cause.code === '23503'
+  )
+}
+
 export const listCategories = async (req: Request, res: Response) => {
   try {
     const allCategories = await db
@@ -134,6 +153,13 @@ export const deleteCategory = async (
 
     return res.status(204).send()
   } catch (error) {
+    if (isForeignKeyViolation(error)) {
+      return res.status(409).json({
+        error: 'Conflict',
+        message: 'Category still has books assigned to it',
+      })
+    }
+
     console.error('Delete category error:', error)
     return res.status(500).json({ error: 'Failed to delete category' })
   }

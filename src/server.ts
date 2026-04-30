@@ -1,5 +1,6 @@
 import express from 'express'
 import authRoutes from './routes/authRoutes.ts'
+import bookRoutes from './routes/bookRoutes.ts'
 import categoryRoutes from './routes/categoryRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
 import swaggerUi from 'swagger-ui-express'
@@ -37,6 +38,7 @@ app.get('/api/docs.json', (req, res) => {
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec))
 
 app.use('/api/auth', authRoutes)
+app.use('/api/books', bookRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/profile', userRoutes)
 
