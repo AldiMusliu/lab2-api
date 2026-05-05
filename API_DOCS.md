@@ -219,6 +219,47 @@ DELETE /books/:id
 
 Create/update uses the same book fields without `id`. Delete returns `204`.
 
+## Borrowings
+
+All borrowing routes require a JWT.
+
+```http
+GET /borrowings
+GET /borrowings/:id
+POST /borrowings
+PATCH /borrowings/:id/return
+```
+
+Users see and return only their own borrowings. Admins can view and return all
+borrowings, and can optionally pass `userId` when creating a borrowing for
+someone else.
+
+Create body:
+
+```json
+{
+  "bookId": "book-id",
+  "dueAt": "2026-05-04T10:00:00.000Z"
+}
+```
+
+Borrowing responses return:
+
+```json
+{
+  "id": "borrowing-id",
+  "userId": "user-id",
+  "bookId": "book-id",
+  "borrowedAt": "2026-04-20T10:00:00.000Z",
+  "dueAt": "2026-05-04T10:00:00.000Z",
+  "returnedAt": null,
+  "status": "active"
+}
+```
+
+Borrowing decreases `availableCopies` by `1`; returning increases it by `1`.
+Both operations run inside PostgreSQL transactions.
+
 ## Demo Seed Accounts
 
 ```text

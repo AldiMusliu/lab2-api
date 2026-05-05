@@ -6,7 +6,7 @@ export const openApiSpec = {
     title: 'Smart Library API',
     version: '1.0.0',
     description:
-      'Smart Library backend API for auth, profiles, categories, and books.',
+      'Smart Library backend API for auth, profiles, categories, books, and borrowings.',
   },
   servers: [
     {
@@ -20,6 +20,7 @@ export const openApiSpec = {
     { name: 'Profile' },
     { name: 'Categories' },
     { name: 'Books' },
+    { name: 'Borrowings' },
   ],
   components: {
     securitySchemes: {
@@ -144,6 +145,48 @@ export const openApiSpec = {
           tags: { type: 'array', items: { type: 'string' } },
           coverImage: { type: 'string' },
           coverTone: { type: 'string' },
+        },
+      },
+      Borrowing: {
+        type: 'object',
+        required: [
+          'id',
+          'userId',
+          'bookId',
+          'borrowedAt',
+          'dueAt',
+          'returnedAt',
+          'status',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          userId: { type: 'string', format: 'uuid' },
+          bookId: { type: 'string', format: 'uuid' },
+          borrowedAt: { type: 'string', format: 'date-time' },
+          dueAt: { type: 'string', format: 'date-time' },
+          returnedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
+          status: {
+            type: 'string',
+            enum: ['active', 'returned', 'overdue'],
+          },
+        },
+      },
+      BorrowingInput: {
+        type: 'object',
+        required: ['bookId', 'dueAt'],
+        properties: {
+          userId: {
+            type: 'string',
+            format: 'uuid',
+            description:
+              'Optional admin-only override. Regular users always borrow for themselves.',
+          },
+          bookId: { type: 'string', format: 'uuid' },
+          dueAt: { type: 'string', format: 'date-time' },
         },
       },
       ChangePasswordBody: {
@@ -507,6 +550,119 @@ export const openApiSpec = {
           403: { description: 'Admin role required' },
           404: { description: 'Book not found' },
           409: { description: 'Book is still referenced' },
+        },
+      },
+    },
+    '/api/borrowings': {
+      get: {
+        tags: ['Borrowings'],
+        summary: 'List borrowings',
+        description:
+          'Admins receive all borrowings. Regular users receive only their own borrowings.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Borrowings returned',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Borrowing' },
+                },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+        },
+      },
+      post: {
+        tags: ['Borrowings'],
+        summary: 'Create a borrowing',
+        description:
+          'Borrows an available book and decrements availableCopies inside a PostgreSQL transaction.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/BorrowingInput' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Borrowing created',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Borrowing' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          404: { description: 'User or book not found' },
+          409: { description: 'Book has no available copies' },
+        },
+      },
+    },
+    '/api/borrowings/{id}': {
+      get: {
+        tags: ['Borrowings'],
+        summary: 'Get a borrowing',
+        description:
+          'Admins can access any borrowing. Regular users can access only their own borrowing.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Borrowing returned',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Borrowing' },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Borrowing belongs to another user' },
+          404: { description: 'Borrowing not found' },
+        },
+      },
+    },
+    '/api/borrowings/{id}/return': {
+      patch: {
+        tags: ['Borrowings'],
+        summary: 'Return a borrowing',
+        description:
+          'Marks a borrowing returned and increments availableCopies inside a PostgreSQL transaction.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Borrowing returned successfully',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Borrowing' },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Borrowing belongs to another user' },
+          404: { description: 'Borrowing not found' },
+          409: { description: 'Borrowing has already been returned' },
         },
       },
     },

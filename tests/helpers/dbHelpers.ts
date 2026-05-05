@@ -1,8 +1,10 @@
 import { db } from '../../src/db/connection.ts'
 import {
   books,
+  borrowings,
   categories,
   users,
+  type BorrowingStatus,
   type BookFormat,
   type UserRole,
 } from '../../src/db/schema.ts'
@@ -105,7 +107,36 @@ export async function createTestBook(
   return book
 }
 
+export async function createTestBorrowing(
+  borrowingData: Partial<{
+    userId: string
+    bookId: string
+    dueAt: Date
+    returnedAt: Date | null
+    status: BorrowingStatus
+  }> = {},
+) {
+  const userId = borrowingData.userId ?? (await createTestUser()).user.id
+  const bookId = borrowingData.bookId ?? (await createTestBook()).id
+
+  const [borrowing] = await db
+    .insert(borrowings)
+    .values({
+      userId,
+      bookId,
+      dueAt:
+        borrowingData.dueAt ??
+        new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      returnedAt: borrowingData.returnedAt,
+      status: borrowingData.status ?? 'active',
+    })
+    .returning()
+
+  return borrowing
+}
+
 export async function cleanupDatabase() {
+  await db.delete(borrowings)
   await db.delete(books)
   await db.delete(categories)
   await db.delete(users)

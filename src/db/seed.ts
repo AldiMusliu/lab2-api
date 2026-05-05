@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { db } from './connection.ts'
-import { books, categories, users } from './schema.ts'
+import { books, borrowings, categories, users } from './schema.ts'
 import { hashPassword } from '../utils/password.ts'
 
 const seed = async () => {
@@ -9,6 +9,7 @@ const seed = async () => {
 
   try {
     console.log('Clearing existing data...')
+    await db.delete(borrowings)
     await db.delete(books)
     await db.delete(categories)
     await db.delete(users)
@@ -16,22 +17,25 @@ const seed = async () => {
     console.log('Creating demo users...')
     const passwordHash = await hashPassword('password123')
 
-    await db.insert(users).values([
-      {
-        firstName: 'Aldi',
-        lastName: 'Admin',
-        email: 'aldi@admin.com',
-        passwordHash,
-        role: 'admin',
-      },
-      {
-        firstName: 'Aldi',
-        lastName: 'Reader',
-        email: 'aldi@user.com',
-        passwordHash,
-        role: 'user',
-      },
-    ])
+    const createdUsers = await db
+      .insert(users)
+      .values([
+        {
+          firstName: 'Aldi',
+          lastName: 'Admin',
+          email: 'aldi@admin.com',
+          passwordHash,
+          role: 'admin',
+        },
+        {
+          firstName: 'Aldi',
+          lastName: 'Reader',
+          email: 'aldi@user.com',
+          passwordHash,
+          role: 'user',
+        },
+      ])
+      .returning()
 
     console.log('Creating categories...')
     const createdCategories = await db
@@ -50,106 +54,139 @@ const seed = async () => {
     )
 
     console.log('Creating books...')
-    await db.insert(books).values([
+    const createdBooks = await db
+      .insert(books)
+      .values([
+        {
+          title: 'Clean Code',
+          author: 'Robert C. Martin',
+          categoryId: categoryByName.get('Software Engineering')!,
+          availableCopies: 4,
+          totalCopies: 6,
+          publishedYear: 2008,
+          language: 'English',
+          pages: 464,
+          isbn: '9780132350884',
+          shelfLocation: 'A2-SW-014',
+          formats: ['Print', 'E-book'],
+          readOnline: true,
+          description:
+            'A practical guide to writing readable, maintainable software.',
+          tags: ['Refactoring', 'Testing', 'Craftsmanship'],
+          coverImage:
+            'https://images-na.ssl-images-amazon.com/images/I/41xShlnTZTL._SX374_BO1,204,203,200_.jpg',
+          coverTone: 'teal',
+        },
+        {
+          title: 'Designing Data-Intensive Applications',
+          author: 'Martin Kleppmann',
+          categoryId: categoryByName.get('Data & AI')!,
+          availableCopies: 2,
+          totalCopies: 4,
+          publishedYear: 2017,
+          language: 'English',
+          pages: 616,
+          isbn: '9781449373320',
+          shelfLocation: 'B1-DA-021',
+          formats: ['Print', 'E-book', 'Audiobook'],
+          readOnline: true,
+          description:
+            'A deep look at reliable, scalable, and maintainable data systems.',
+          tags: ['Distributed Systems', 'Databases', 'Architecture'],
+          coverImage:
+            'https://covers.openlibrary.org/b/isbn/9781449373320-L.jpg',
+          coverTone: 'blue',
+        },
+        {
+          title: 'The Design of Everyday Things',
+          author: 'Don Norman',
+          categoryId: categoryByName.get('Product Design')!,
+          availableCopies: 3,
+          totalCopies: 3,
+          publishedYear: 2013,
+          language: 'English',
+          pages: 368,
+          isbn: '9780465050659',
+          shelfLocation: 'C3-PD-008',
+          formats: ['Print'],
+          readOnline: false,
+          description:
+            'A classic introduction to human-centered product design.',
+          tags: ['UX', 'Usability', 'Product'],
+          coverImage:
+            'https://covers.openlibrary.org/b/isbn/9780465050659-L.jpg',
+          coverTone: 'amber',
+        },
+        {
+          title: 'The Lean Startup',
+          author: 'Eric Ries',
+          categoryId: categoryByName.get('Business & Leadership')!,
+          availableCopies: 1,
+          totalCopies: 2,
+          publishedYear: 2011,
+          language: 'English',
+          pages: 336,
+          isbn: '9780307887894',
+          shelfLocation: 'D2-BL-017',
+          formats: ['Print', 'Audiobook'],
+          readOnline: false,
+          description:
+            'A business framework for testing ideas and building products faster.',
+          tags: ['Startup', 'Leadership', 'Product'],
+          coverImage:
+            'https://covers.openlibrary.org/b/isbn/9780307887894-L.jpg',
+          coverTone: 'green',
+        },
+        {
+          title: 'Tomorrow, and Tomorrow, and Tomorrow',
+          author: 'Gabrielle Zevin',
+          categoryId: categoryByName.get('Modern Fiction')!,
+          availableCopies: 0,
+          totalCopies: 2,
+          publishedYear: 2022,
+          language: 'English',
+          pages: 416,
+          isbn: '9780593321201',
+          shelfLocation: 'E5-MF-003',
+          formats: ['Print', 'E-book'],
+          readOnline: true,
+          description:
+            'A novel about friendship, ambition, art, and the making of games.',
+          tags: ['Fiction', 'Games', 'Friendship'],
+          coverImage:
+            'https://covers.openlibrary.org/b/isbn/9780593321201-L.jpg',
+          coverTone: 'rose',
+        },
+      ])
+      .returning()
+
+    const user = createdUsers.find(
+      (createdUser) => createdUser.email === 'aldi@user.com',
+    )!
+    const bookByTitle = new Map(
+      createdBooks.map((book) => [book.title, book.id]),
+    )
+
+    console.log('Creating example borrowings...')
+    await db.insert(borrowings).values([
       {
-        title: 'Clean Code',
-        author: 'Robert C. Martin',
-        categoryId: categoryByName.get('Software Engineering')!,
-        availableCopies: 4,
-        totalCopies: 6,
-        publishedYear: 2008,
-        language: 'English',
-        pages: 464,
-        isbn: '9780132350884',
-        shelfLocation: 'A2-SW-014',
-        formats: ['Print', 'E-book'],
-        readOnline: true,
-        description:
-          'A practical guide to writing readable, maintainable software.',
-        tags: ['Refactoring', 'Testing', 'Craftsmanship'],
-        coverImage:
-          'https://images-na.ssl-images-amazon.com/images/I/41xShlnTZTL._SX374_BO1,204,203,200_.jpg',
-        coverTone: 'teal',
+        userId: user.id,
+        bookId: bookByTitle.get('Clean Code')!,
+        dueAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        status: 'active',
       },
       {
-        title: 'Designing Data-Intensive Applications',
-        author: 'Martin Kleppmann',
-        categoryId: categoryByName.get('Data & AI')!,
-        availableCopies: 2,
-        totalCopies: 4,
-        publishedYear: 2017,
-        language: 'English',
-        pages: 616,
-        isbn: '9781449373320',
-        shelfLocation: 'B1-DA-021',
-        formats: ['Print', 'E-book', 'Audiobook'],
-        readOnline: true,
-        description:
-          'A deep look at reliable, scalable, and maintainable data systems.',
-        tags: ['Distributed Systems', 'Databases', 'Architecture'],
-        coverImage:
-          'https://covers.openlibrary.org/b/isbn/9781449373320-L.jpg',
-        coverTone: 'blue',
+        userId: user.id,
+        bookId: bookByTitle.get('Tomorrow, and Tomorrow, and Tomorrow')!,
+        dueAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        status: 'overdue',
       },
       {
-        title: 'The Design of Everyday Things',
-        author: 'Don Norman',
-        categoryId: categoryByName.get('Product Design')!,
-        availableCopies: 3,
-        totalCopies: 3,
-        publishedYear: 2013,
-        language: 'English',
-        pages: 368,
-        isbn: '9780465050659',
-        shelfLocation: 'C3-PD-008',
-        formats: ['Print'],
-        readOnline: false,
-        description:
-          'A classic introduction to human-centered product design.',
-        tags: ['UX', 'Usability', 'Product'],
-        coverImage:
-          'https://covers.openlibrary.org/b/isbn/9780465050659-L.jpg',
-        coverTone: 'amber',
-      },
-      {
-        title: 'The Lean Startup',
-        author: 'Eric Ries',
-        categoryId: categoryByName.get('Business & Leadership')!,
-        availableCopies: 1,
-        totalCopies: 2,
-        publishedYear: 2011,
-        language: 'English',
-        pages: 336,
-        isbn: '9780307887894',
-        shelfLocation: 'D2-BL-017',
-        formats: ['Print', 'Audiobook'],
-        readOnline: false,
-        description:
-          'A business framework for testing ideas and building products faster.',
-        tags: ['Startup', 'Leadership', 'Product'],
-        coverImage:
-          'https://covers.openlibrary.org/b/isbn/9780307887894-L.jpg',
-        coverTone: 'green',
-      },
-      {
-        title: 'Tomorrow, and Tomorrow, and Tomorrow',
-        author: 'Gabrielle Zevin',
-        categoryId: categoryByName.get('Modern Fiction')!,
-        availableCopies: 0,
-        totalCopies: 2,
-        publishedYear: 2022,
-        language: 'English',
-        pages: 416,
-        isbn: '9780593321201',
-        shelfLocation: 'E5-MF-003',
-        formats: ['Print', 'E-book'],
-        readOnline: true,
-        description:
-          'A novel about friendship, ambition, art, and the making of games.',
-        tags: ['Fiction', 'Games', 'Friendship'],
-        coverImage:
-          'https://covers.openlibrary.org/b/isbn/9780593321201-L.jpg',
-        coverTone: 'rose',
+        userId: user.id,
+        bookId: bookByTitle.get('The Lean Startup')!,
+        dueAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        returnedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        status: 'returned',
       },
     ])
 
