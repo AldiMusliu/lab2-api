@@ -77,6 +77,25 @@ const toBorrowing = (borrowing: Borrowing) => ({
   status: toBorrowingStatus(borrowing),
 })
 
+type BorrowingWithUserRow = {
+  borrowing: Borrowing
+  user: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+}
+
+const toBorrowingWithUser = (row: BorrowingWithUserRow) => ({
+  ...toBorrowing(row.borrowing),
+  user: {
+    id: row.user.id,
+    firstName: row.user.firstName,
+    lastName: row.user.lastName,
+    name: `${row.user.firstName} ${row.user.lastName}`.trim(),
+  },
+})
+
 const handleControllerError = (
   error: unknown,
   res: Response,
@@ -103,19 +122,30 @@ export const listBorrowings = async (
   res: Response,
 ) => {
   try {
-    const allBorrowings =
-      req.user!.role === 'admin'
-        ? await db
-            .select()
-            .from(borrowings)
-            .orderBy(desc(borrowings.borrowedAt))
-        : await db
-            .select()
-            .from(borrowings)
-            .where(eq(borrowings.userId, req.user!.userId))
-            .orderBy(desc(borrowings.borrowedAt))
+    if (req.user!.role === 'admin') {
+      const allBorrowings = await db
+        .select({
+          borrowing: borrowings,
+          user: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+          },
+        })
+        .from(borrowings)
+        .innerJoin(users, eq(borrowings.userId, users.id))
+        .orderBy(desc(borrowings.borrowedAt))
 
-    return res.json(allBorrowings.map(toBorrowing))
+      return res.json(allBorrowings.map(toBorrowingWithUser))
+    }
+
+    const ownBorrowings = await db
+      .select()
+      .from(borrowings)
+      .where(eq(borrowings.userId, req.user!.userId))
+      .orderBy(desc(borrowings.borrowedAt))
+
+    return res.json(ownBorrowings.map(toBorrowing))
   } catch (error) {
     return handleControllerError(
       error,

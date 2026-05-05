@@ -249,6 +249,12 @@ Borrowing responses return:
 {
   "id": "borrowing-id",
   "userId": "user-id",
+  "user": {
+    "id": "user-id",
+    "firstName": "Alex",
+    "lastName": "Reader",
+    "name": "Alex Reader"
+  },
   "bookId": "book-id",
   "borrowedAt": "2026-04-20T10:00:00.000Z",
   "dueAt": "2026-05-04T10:00:00.000Z",
@@ -256,6 +262,8 @@ Borrowing responses return:
   "status": "active"
 }
 ```
+
+`user` is included on admin `GET /borrowings` responses so dashboards can show borrower names.
 
 Borrowing decreases `availableCopies` by `1`; returning increases it by `1`.
 Both operations run inside PostgreSQL transactions. A user cannot borrow the

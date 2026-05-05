@@ -248,10 +248,37 @@ describe('Borrowings API', () => {
       .set('Authorization', `Bearer ${admin.accessToken}`)
       .expect(200)
 
+    expect(adminResponse.body[0]).toEqual(
+      expect.objectContaining({
+        user: expect.objectContaining({
+          id: expect.any(String),
+          firstName: expect.any(String),
+          lastName: expect.any(String),
+          name: expect.any(String),
+        }),
+      }),
+    )
+
     expect(adminResponse.body).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ id: borrowingA.id }),
-        expect.objectContaining({ id: borrowingB.id }),
+        expect.objectContaining({
+          id: borrowingA.id,
+          user: expect.objectContaining({
+            id: userA.user.id,
+            firstName: userA.user.firstName,
+            lastName: userA.user.lastName,
+            name: `${userA.user.firstName} ${userA.user.lastName}`,
+          }),
+        }),
+        expect.objectContaining({
+          id: borrowingB.id,
+          user: expect.objectContaining({
+            id: userB.user.id,
+            firstName: userB.user.firstName,
+            lastName: userB.user.lastName,
+            name: `${userB.user.firstName} ${userB.user.lastName}`,
+          }),
+        }),
       ]),
     )
   })

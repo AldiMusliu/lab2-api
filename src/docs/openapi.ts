@@ -161,6 +161,18 @@ export const openApiSpec = {
         properties: {
           id: { type: 'string', format: 'uuid' },
           userId: { type: 'string', format: 'uuid' },
+          user: {
+            type: 'object',
+            nullable: true,
+            description:
+              'Included for admin list responses to provide borrower identity details.',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              firstName: { type: 'string' },
+              lastName: { type: 'string' },
+              name: { type: 'string' },
+            },
+          },
           bookId: { type: 'string', format: 'uuid' },
           borrowedAt: { type: 'string', format: 'date-time' },
           dueAt: { type: 'string', format: 'date-time' },
