@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
@@ -85,21 +86,29 @@ export const books = pgTable(
   ],
 )
 
-export const borrowings = pgTable('borrowings', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  bookId: uuid('book_id')
-    .notNull()
-    .references(() => books.id, { onDelete: 'restrict' }),
-  borrowedAt: timestamp('borrowed_at').defaultNow().notNull(),
-  dueAt: timestamp('due_at').notNull(),
-  returnedAt: timestamp('returned_at'),
-  status: borrowingStatusEnum('status').default('active').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').defaultNow().notNull(),
-})
+export const borrowings = pgTable(
+  'borrowings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    bookId: uuid('book_id')
+      .notNull()
+      .references(() => books.id, { onDelete: 'restrict' }),
+    borrowedAt: timestamp('borrowed_at').defaultNow().notNull(),
+    dueAt: timestamp('due_at').notNull(),
+    returnedAt: timestamp('returned_at'),
+    status: borrowingStatusEnum('status').default('active').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('borrowings_open_user_book_unique')
+      .on(table.userId, table.bookId)
+      .where(sql`${table.returnedAt} IS NULL`),
+  ],
+)
 
 export const userRelations = relations(users, ({ many }) => ({
   borrowings: many(borrowings),

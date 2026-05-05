@@ -1,5 +1,5 @@
 import type { Response } from 'express'
-import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm'
+import { and, desc, eq, gt, isNull, lt, ne, sql } from 'drizzle-orm'
 import { db } from '../db/connection.ts'
 import {
   books,
@@ -36,6 +36,25 @@ const isHttpError = (error: unknown): error is HttpError => {
   return error instanceof HttpError
 }
 
+const hasDbErrorCode = (error: unknown, code: string) => {
+  if (typeof error !== 'object' || error === null) {
+    return false
+  }
+
+  if ('code' in error && error.code === code) {
+    return true
+  }
+
+  const cause = 'cause' in error ? error.cause : undefined
+
+  return (
+    typeof cause === 'object' &&
+    cause !== null &&
+    'code' in cause &&
+    cause.code === code
+  )
+}
+
 const toBorrowingStatus = (borrowing: Borrowing): BorrowingStatus => {
   if (borrowing.status === 'returned' || borrowing.returnedAt) {
     return 'returned'
@@ -66,6 +85,13 @@ const handleControllerError = (
 ) => {
   if (isHttpError(error)) {
     return res.status(error.statusCode).json(error.body)
+  }
+
+  if (hasDbErrorCode(error, '23505')) {
+    return res.status(409).json({
+      error: 'Conflict',
+      message: 'You already have an active borrowing for this book',
+    })
   }
 
   console.error(logMessage, error)
@@ -159,6 +185,25 @@ export const createBorrowing = async (
 
       if (!book) {
         throw new HttpError(404, { error: 'Book not found' })
+      }
+
+      const [openBorrowing] = await tx
+        .select({ id: borrowings.id })
+        .from(borrowings)
+        .where(
+          and(
+            eq(borrowings.userId, targetUserId),
+            eq(borrowings.bookId, body.bookId),
+            isNull(borrowings.returnedAt),
+            ne(borrowings.status, 'returned'),
+          ),
+        )
+
+      if (openBorrowing) {
+        throw new HttpError(409, {
+          error: 'Conflict',
+          message: 'You already have an active borrowing for this book',
+        })
       }
 
       if (book.availableCopies <= 0) {

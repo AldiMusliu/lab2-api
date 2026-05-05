@@ -79,6 +79,40 @@ describe('Borrowings API', () => {
     expect(response.body.userId).toBe(user.id)
   })
 
+  it('rejects borrowing the same book twice while the first borrowing is active', async () => {
+    const { accessToken } = await createTestUser()
+    const book = await createTestBook({
+      availableCopies: 2,
+      totalCopies: 2,
+    })
+
+    await request(app)
+      .post('/api/borrowings')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        bookId: book.id,
+        dueAt: futureDueAt(),
+      })
+      .expect(201)
+
+    const response = await request(app)
+      .post('/api/borrowings')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        bookId: book.id,
+        dueAt: futureDueAt(),
+      })
+      .expect(409)
+
+    expect(response.body).toEqual({
+      error: 'Conflict',
+      message: 'You already have an active borrowing for this book',
+    })
+
+    const updatedBook = await getBook(book.id)
+    expect(updatedBook.availableCopies).toBe(1)
+  })
+
   it('allows admins to create a borrowing for another user', async () => {
     const { accessToken } = await createTestUser({ role: 'admin' })
     const borrower = await createTestUser()
@@ -141,6 +175,44 @@ describe('Borrowings API', () => {
       .expect(201)
 
     expect(response.body.status).toBe('overdue')
+  })
+
+  it('allows borrowing the same book again after returning it', async () => {
+    const { accessToken } = await createTestUser()
+    const book = await createTestBook({
+      availableCopies: 1,
+      totalCopies: 1,
+    })
+
+    const createResponse = await request(app)
+      .post('/api/borrowings')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        bookId: book.id,
+        dueAt: futureDueAt(),
+      })
+      .expect(201)
+
+    await request(app)
+      .patch(`/api/borrowings/${createResponse.body.id}/return`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200)
+
+    const secondBorrowResponse = await request(app)
+      .post('/api/borrowings')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        bookId: book.id,
+        dueAt: futureDueAt(),
+      })
+      .expect(201)
+
+    expect(secondBorrowResponse.body).toEqual(
+      expect.objectContaining({
+        bookId: book.id,
+        status: 'active',
+      }),
+    )
   })
 
   it('lists only own borrowings for users and all borrowings for admins', async () => {

@@ -138,6 +138,8 @@ Behavior:
 - Admins receive all borrowings.
 - Normal users cannot borrow on behalf of another user.
 - Admins may pass `userId` when creating a borrowing for someone else.
+- A user cannot borrow the same book again while their existing borrowing is
+  active or overdue.
 - Creating a borrowing decrements `availableCopies`.
 - Returning a borrowing increments `availableCopies`.
 
@@ -249,7 +251,10 @@ export const borrowingKeys = {
 - On return success, invalidate `bookKeys` and `borrowingKeys`.
 - Use `status === "overdue"` to style overdue history rows.
 - Use `returnedAt === null` to decide whether a return action should be visible.
-- Surface backend `409` errors for unavailable books or already returned borrowings.
+- Disable the borrow button when the user already has an active/overdue
+  borrowing for that book.
+- Surface backend `409` errors for unavailable books, duplicate active
+  borrowings, or already returned borrowings.
 
 ## Suggested Borrow Button Flow
 

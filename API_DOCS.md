@@ -258,7 +258,9 @@ Borrowing responses return:
 ```
 
 Borrowing decreases `availableCopies` by `1`; returning increases it by `1`.
-Both operations run inside PostgreSQL transactions.
+Both operations run inside PostgreSQL transactions. A user cannot borrow the
+same book again while their existing borrowing for that book is active or
+overdue.
 
 ## Demo Seed Accounts
 

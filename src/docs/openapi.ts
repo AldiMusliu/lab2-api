@@ -601,7 +601,10 @@ export const openApiSpec = {
           400: { description: 'Validation failed' },
           401: { description: 'Missing or invalid token' },
           404: { description: 'User or book not found' },
-          409: { description: 'Book has no available copies' },
+          409: {
+            description:
+              'Book has no available copies or user already has an active borrowing for this book',
+          },
         },
       },
     },
