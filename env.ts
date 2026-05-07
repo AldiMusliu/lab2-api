@@ -28,6 +28,11 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'Must be 32 chars long'),
   JWT_EXPIRES_IN: z.string().default('7d'),
   BCRYPT_ROUNDS: z.coerce.number().min(10).max(20).default(12),
+  MONGODB_URI: z
+    .string()
+    .min(1)
+    .default('mongodb://127.0.0.1:27017/smart-library'),
+  MONGODB_DB_NAME: z.string().min(1).default('smart-library'),
 })
 
 //This creates a Typscript type from the Zod schema,

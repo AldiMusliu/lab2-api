@@ -314,6 +314,62 @@ Regular users receive stats for only their own borrowing history:
 `overdueBorrowings` is calculated from open borrowings whose `dueAt` is in the
 past, even if the stored status has not been refreshed yet.
 
+## Notifications
+
+Notifications are stored in MongoDB and all notification routes require a JWT.
+Regular users can list, mark, and delete only their own notifications. Admins
+can create notifications for users.
+
+```http
+GET /notifications
+GET /notifications/unread-count
+POST /notifications
+PATCH /notifications/read-all
+PATCH /notifications/:id/read
+DELETE /notifications/:id
+```
+
+Optional list query params:
+
+```text
+unreadOnly=true|false, limit=1..100
+```
+
+Admin create body:
+
+```json
+{
+  "userId": "user-id",
+  "title": "Book due soon",
+  "message": "Your borrowed book is due soon.",
+  "type": "due-soon"
+}
+```
+
+Notification responses return:
+
+```json
+{
+  "id": "mongo-object-id",
+  "userId": "user-id",
+  "title": "Book due soon",
+  "message": "Your borrowed book is due soon.",
+  "type": "due-soon",
+  "readAt": null,
+  "createdAt": "2026-05-07T18:00:00.000Z"
+}
+```
+
+Borrowing and returning books also create best-effort MongoDB notifications.
+If MongoDB is unavailable, the PostgreSQL borrowing transaction still succeeds.
+
+Set these values in `.env` when you do not want the local defaults:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/smart-library
+MONGODB_DB_NAME=smart-library
+```
+
 ## Demo Seed Accounts
 
 ```text

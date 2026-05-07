@@ -4,6 +4,7 @@ import bookRoutes from './routes/bookRoutes.ts'
 import borrowingRoutes from './routes/borrowingRoutes.ts'
 import categoryRoutes from './routes/categoryRoutes.ts'
 import dashboardRoutes from './routes/dashboardRoutes.ts'
+import notificationRoutes from './routes/notificationRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
 import swaggerUi from 'swagger-ui-express'
 import cors from 'cors'
@@ -44,6 +45,7 @@ app.use('/api/books', bookRoutes)
 app.use('/api/borrowings', borrowingRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/dashboard', dashboardRoutes)
+app.use('/api/notifications', notificationRoutes)
 app.use('/api/profile', userRoutes)
 
 app.use(

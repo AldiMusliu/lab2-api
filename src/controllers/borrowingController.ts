@@ -9,6 +9,7 @@ import {
   type BorrowingStatus,
 } from '../db/schema.ts'
 import type { AuthenticatedRequest } from '../middleware/auth.ts'
+import { createNotificationSafely } from '../services/notificationService.ts'
 
 type CreateBorrowingBody = {
   bookId: string
@@ -76,6 +77,35 @@ const toBorrowing = (borrowing: Borrowing) => ({
   returnedAt: borrowing.returnedAt?.toISOString() ?? null,
   status: toBorrowingStatus(borrowing),
 })
+
+const getBorrowingNotification = (borrowing: Borrowing) => {
+  const dueAt = borrowing.dueAt.toISOString()
+  const status = toBorrowingStatus(borrowing)
+
+  if (status === 'overdue') {
+    return {
+      title: 'Borrowing overdue',
+      message: `Your borrowed book is overdue. It was due on ${dueAt}.`,
+      type: 'overdue',
+    }
+  }
+
+  const dueSoonCutoff = Date.now() + 7 * 24 * 60 * 60 * 1000
+
+  if (borrowing.dueAt.getTime() <= dueSoonCutoff) {
+    return {
+      title: 'Book due soon',
+      message: `Your borrowed book is due on ${dueAt}.`,
+      type: 'due-soon',
+    }
+  }
+
+  return {
+    title: 'Book borrowed',
+    message: `Your borrowing was created successfully. It is due on ${dueAt}.`,
+    type: 'system',
+  }
+}
 
 type BorrowingWithUserRow = {
   borrowing: Borrowing
@@ -274,6 +304,11 @@ export const createBorrowing = async (
       return createdBorrowing
     })
 
+    await createNotificationSafely({
+      userId: borrowing.userId,
+      ...getBorrowingNotification(borrowing),
+    })
+
     return res.status(201).json(toBorrowing(borrowing))
   } catch (error) {
     return handleControllerError(
@@ -359,6 +394,13 @@ export const returnBorrowing = async (
       }
 
       return updatedBorrowing
+    })
+
+    await createNotificationSafely({
+      userId: borrowing.userId,
+      title: 'Book returned',
+      message: 'Your borrowed book was returned successfully.',
+      type: 'system',
     })
 
     return res.json(toBorrowing(borrowing))
