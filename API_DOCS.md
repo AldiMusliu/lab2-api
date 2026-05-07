@@ -136,6 +136,60 @@ Successful password changes return:
 }
 ```
 
+## Users
+
+Admin-only user management:
+
+```http
+GET /users
+GET /users/:id
+POST /users
+PUT /users/:id
+DELETE /users/:id
+```
+
+Create body:
+
+```json
+{
+  "firstName": "Alex",
+  "lastName": "Reader",
+  "email": "alex@example.com",
+  "password": "password123",
+  "role": "user"
+}
+```
+
+Update body:
+
+```json
+{
+  "firstName": "Alex",
+  "lastName": "Reader",
+  "email": "alex@example.com",
+  "role": "user",
+  "password": "newPassword123"
+}
+```
+
+Leave `password` out when it should not change. User responses never include
+`passwordHash`:
+
+```json
+{
+  "id": "user-id",
+  "firstName": "Alex",
+  "lastName": "Reader",
+  "email": "alex@example.com",
+  "role": "user",
+  "createdAt": "2026-05-07T18:00:00.000Z",
+  "updatedAt": "2026-05-07T18:00:00.000Z"
+}
+```
+
+Admins cannot change their own role or delete their own account through these
+routes.
+
 ## Categories
 
 ```http

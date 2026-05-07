@@ -17,6 +17,7 @@ export const openApiSpec = {
   tags: [
     { name: 'Health' },
     { name: 'Auth' },
+    { name: 'Users' },
     { name: 'Profile' },
     { name: 'Categories' },
     { name: 'Books' },
@@ -58,6 +59,53 @@ export const openApiSpec = {
         properties: {
           accessToken: { type: 'string' },
           user: { $ref: '#/components/schemas/AuthUser' },
+        },
+      },
+      User: {
+        type: 'object',
+        required: [
+          'id',
+          'firstName',
+          'lastName',
+          'email',
+          'role',
+          'createdAt',
+          'updatedAt',
+        ],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          firstName: { type: 'string' },
+          lastName: { type: 'string' },
+          email: { type: 'string', format: 'email' },
+          role: { type: 'string', enum: ['admin', 'user'] },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      CreateUserInput: {
+        type: 'object',
+        required: ['firstName', 'lastName', 'email', 'password', 'role'],
+        properties: {
+          firstName: { type: 'string', maxLength: 60 },
+          lastName: { type: 'string', maxLength: 60 },
+          email: { type: 'string', format: 'email', maxLength: 255 },
+          password: { type: 'string', minLength: 8 },
+          role: { type: 'string', enum: ['admin', 'user'], default: 'user' },
+        },
+      },
+      UpdateUserInput: {
+        type: 'object',
+        required: ['firstName', 'lastName', 'email', 'role'],
+        properties: {
+          firstName: { type: 'string', maxLength: 60 },
+          lastName: { type: 'string', maxLength: 60 },
+          email: { type: 'string', format: 'email', maxLength: 255 },
+          role: { type: 'string', enum: ['admin', 'user'] },
+          password: {
+            type: 'string',
+            minLength: 8,
+            description: 'Optional. Include only when changing the password.',
+          },
         },
       },
       Category: {
@@ -442,6 +490,144 @@ export const openApiSpec = {
         responses: {
           204: { description: 'Logged out' },
           401: { description: 'Missing or invalid token' },
+        },
+      },
+    },
+    '/api/users': {
+      get: {
+        tags: ['Users'],
+        summary: 'List users',
+        description: 'Admin-only endpoint. Password hashes are never returned.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Users returned',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/User' },
+                },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+        },
+      },
+      post: {
+        tags: ['Users'],
+        summary: 'Create a user',
+        description: 'Admin-only endpoint for creating admin or user accounts.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/CreateUserInput' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'User created',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/User' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          409: { description: 'Email already registered' },
+        },
+      },
+    },
+    '/api/users/{id}': {
+      get: {
+        tags: ['Users'],
+        summary: 'Get a user',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'User returned',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/User' },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          404: { description: 'User not found' },
+        },
+      },
+      put: {
+        tags: ['Users'],
+        summary: 'Update a user',
+        description:
+          'Admin-only endpoint. Password is optional. Admins cannot change their own role.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/UpdateUserInput' },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'User updated',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/User' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          404: { description: 'User not found' },
+          409: { description: 'Email already registered' },
+        },
+      },
+      delete: {
+        tags: ['Users'],
+        summary: 'Delete a user',
+        description: 'Admin-only endpoint. Admins cannot delete themselves.',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          204: { description: 'User deleted' },
+          400: { description: 'Cannot delete own account' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          404: { description: 'User not found' },
         },
       },
     },

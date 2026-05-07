@@ -6,6 +6,7 @@ import categoryRoutes from './routes/categoryRoutes.ts'
 import dashboardRoutes from './routes/dashboardRoutes.ts'
 import notificationRoutes from './routes/notificationRoutes.ts'
 import userRoutes from './routes/userRoutes.ts'
+import usersRoutes from './routes/usersRoutes.ts'
 import swaggerUi from 'swagger-ui-express'
 import cors from 'cors'
 import morgan from 'morgan'
@@ -47,6 +48,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/dashboard', dashboardRoutes)
 app.use('/api/notifications', notificationRoutes)
 app.use('/api/profile', userRoutes)
+app.use('/api/users', usersRoutes)
 
 app.use(
   (
