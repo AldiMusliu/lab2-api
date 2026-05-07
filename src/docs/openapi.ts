@@ -22,6 +22,7 @@ export const openApiSpec = {
     { name: 'Books' },
     { name: 'Borrowings' },
     { name: 'Dashboard' },
+    { name: 'Notifications' },
   ],
   components: {
     securitySchemes: {
@@ -200,6 +201,41 @@ export const openApiSpec = {
           },
           bookId: { type: 'string', format: 'uuid' },
           dueAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Notification: {
+        type: 'object',
+        required: [
+          'id',
+          'userId',
+          'title',
+          'message',
+          'type',
+          'readAt',
+          'createdAt',
+        ],
+        properties: {
+          id: { type: 'string', example: '663bf1f5e3f1a7a6f6c4e001' },
+          userId: { type: 'string', format: 'uuid' },
+          title: { type: 'string' },
+          message: { type: 'string' },
+          type: { type: 'string', example: 'due-soon' },
+          readAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      NotificationInput: {
+        type: 'object',
+        required: ['userId', 'title', 'message'],
+        properties: {
+          userId: { type: 'string', format: 'uuid' },
+          title: { type: 'string', maxLength: 120 },
+          message: { type: 'string', maxLength: 1000 },
+          type: { type: 'string', default: 'system', maxLength: 60 },
         },
       },
       ChangePasswordBody: {
@@ -495,6 +531,167 @@ export const openApiSpec = {
             },
           },
           401: { description: 'Missing or invalid token' },
+        },
+      },
+    },
+    '/api/notifications': {
+      get: {
+        tags: ['Notifications'],
+        summary: 'List authenticated user notifications',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'unreadOnly',
+            in: 'query',
+            schema: { type: 'string', enum: ['true', 'false'] },
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            schema: { type: 'integer', minimum: 1, maximum: 100 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Notifications returned',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Notification' },
+                },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          503: { description: 'MongoDB unavailable' },
+        },
+      },
+      post: {
+        tags: ['Notifications'],
+        summary: 'Create a user notification',
+        description: 'Admin-only endpoint backed by MongoDB.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/NotificationInput' },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: 'Notification created',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Notification' },
+              },
+            },
+          },
+          400: { description: 'Validation failed' },
+          401: { description: 'Missing or invalid token' },
+          403: { description: 'Admin role required' },
+          503: { description: 'MongoDB unavailable' },
+        },
+      },
+    },
+    '/api/notifications/unread-count': {
+      get: {
+        tags: ['Notifications'],
+        summary: 'Count unread notifications',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Unread count returned',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['count'],
+                  properties: {
+                    count: { type: 'integer', minimum: 0 },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          503: { description: 'MongoDB unavailable' },
+        },
+      },
+    },
+    '/api/notifications/read-all': {
+      patch: {
+        tags: ['Notifications'],
+        summary: 'Mark all own notifications as read',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Notifications marked as read',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['updatedCount'],
+                  properties: {
+                    updatedCount: { type: 'integer', minimum: 0 },
+                  },
+                },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          503: { description: 'MongoDB unavailable' },
+        },
+      },
+    },
+    '/api/notifications/{id}/read': {
+      patch: {
+        tags: ['Notifications'],
+        summary: 'Mark one own notification as read',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', example: '663bf1f5e3f1a7a6f6c4e001' },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Notification marked as read',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Notification' },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
+          404: { description: 'Notification not found' },
+          503: { description: 'MongoDB unavailable' },
+        },
+      },
+    },
+    '/api/notifications/{id}': {
+      delete: {
+        tags: ['Notifications'],
+        summary: 'Delete one own notification',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', example: '663bf1f5e3f1a7a6f6c4e001' },
+          },
+        ],
+        responses: {
+          204: { description: 'Notification deleted' },
+          401: { description: 'Missing or invalid token' },
+          404: { description: 'Notification not found' },
+          503: { description: 'MongoDB unavailable' },
         },
       },
     },
