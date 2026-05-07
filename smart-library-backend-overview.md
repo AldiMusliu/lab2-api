@@ -841,44 +841,41 @@ Response:
 
 ```http
 GET /api/dashboard/stats
-Authorization: Bearer <admin-token>
+Authorization: Bearer <token>
 ```
 
-Response:
+Admin response:
 
 ```json
 {
+  "role": "admin",
   "totalBooks": 12,
-  "totalBorrowings": 3,
-  "activeUsers": 1,
-  "overdueBorrowings": 1
+  "totalCopies": 40,
+  "availableCopies": 28,
+  "borrowedCopies": 12,
+  "availableBooks": 10,
+  "totalCategories": 5,
+  "totalUsers": 17,
+  "adminUsers": 2,
+  "activeUsers": 6,
+  "totalBorrowings": 31,
+  "activeBorrowings": 8,
+  "overdueBorrowings": 2,
+  "returnedBorrowings": 21
 }
 ```
 
-### Refresh Dashboard Stats
-
-```http
-POST /api/dashboard/stats/refresh
-Authorization: Bearer <admin-token>
-```
-
-Body:
+User response:
 
 ```json
 {
-  "from": "2026-04-01",
-  "to": "2026-04-30"
-}
-```
-
-Response:
-
-```json
-{
-  "totalBooks": 12,
-  "totalBorrowings": 3,
-  "activeUsers": 1,
-  "overdueBorrowings": 1
+  "role": "user",
+  "totalBorrowings": 4,
+  "activeBorrowings": 1,
+  "overdueBorrowings": 1,
+  "returnedBorrowings": 2,
+  "currentBorrowings": 2,
+  "dueSoonBorrowings": 1
 }
 ```
 

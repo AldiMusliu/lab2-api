@@ -270,6 +270,50 @@ Both operations run inside PostgreSQL transactions. A user cannot borrow the
 same book again while their existing borrowing for that book is active or
 overdue.
 
+## Dashboard
+
+```http
+GET /dashboard/stats
+```
+
+This route requires a JWT. Admin users receive library-wide stats:
+
+```json
+{
+  "role": "admin",
+  "totalBooks": 12,
+  "totalCopies": 40,
+  "availableCopies": 28,
+  "borrowedCopies": 12,
+  "availableBooks": 10,
+  "totalCategories": 5,
+  "totalUsers": 17,
+  "adminUsers": 2,
+  "activeUsers": 6,
+  "totalBorrowings": 31,
+  "activeBorrowings": 8,
+  "overdueBorrowings": 2,
+  "returnedBorrowings": 21
+}
+```
+
+Regular users receive stats for only their own borrowing history:
+
+```json
+{
+  "role": "user",
+  "totalBorrowings": 4,
+  "activeBorrowings": 1,
+  "overdueBorrowings": 1,
+  "returnedBorrowings": 2,
+  "currentBorrowings": 2,
+  "dueSoonBorrowings": 1
+}
+```
+
+`overdueBorrowings` is calculated from open borrowings whose `dueAt` is in the
+past, even if the stored status has not been refreshed yet.
+
 ## Demo Seed Accounts
 
 ```text

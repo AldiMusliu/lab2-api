@@ -21,6 +21,7 @@ export const openApiSpec = {
     { name: 'Categories' },
     { name: 'Books' },
     { name: 'Borrowings' },
+    { name: 'Dashboard' },
   ],
   components: {
     securitySchemes: {
@@ -223,6 +224,71 @@ export const openApiSpec = {
           message: { type: 'string' },
         },
       },
+      AdminDashboardStats: {
+        type: 'object',
+        required: [
+          'role',
+          'totalBooks',
+          'totalCopies',
+          'availableCopies',
+          'borrowedCopies',
+          'availableBooks',
+          'totalCategories',
+          'totalUsers',
+          'adminUsers',
+          'activeUsers',
+          'totalBorrowings',
+          'activeBorrowings',
+          'overdueBorrowings',
+          'returnedBorrowings',
+        ],
+        properties: {
+          role: { type: 'string', enum: ['admin'] },
+          totalBooks: { type: 'integer', minimum: 0 },
+          totalCopies: { type: 'integer', minimum: 0 },
+          availableCopies: { type: 'integer', minimum: 0 },
+          borrowedCopies: { type: 'integer', minimum: 0 },
+          availableBooks: { type: 'integer', minimum: 0 },
+          totalCategories: { type: 'integer', minimum: 0 },
+          totalUsers: { type: 'integer', minimum: 0 },
+          adminUsers: { type: 'integer', minimum: 0 },
+          activeUsers: { type: 'integer', minimum: 0 },
+          totalBorrowings: { type: 'integer', minimum: 0 },
+          activeBorrowings: { type: 'integer', minimum: 0 },
+          overdueBorrowings: { type: 'integer', minimum: 0 },
+          returnedBorrowings: { type: 'integer', minimum: 0 },
+        },
+      },
+      UserDashboardStats: {
+        type: 'object',
+        required: [
+          'role',
+          'totalBorrowings',
+          'activeBorrowings',
+          'overdueBorrowings',
+          'returnedBorrowings',
+          'currentBorrowings',
+          'dueSoonBorrowings',
+        ],
+        properties: {
+          role: { type: 'string', enum: ['user'] },
+          totalBorrowings: { type: 'integer', minimum: 0 },
+          activeBorrowings: { type: 'integer', minimum: 0 },
+          overdueBorrowings: { type: 'integer', minimum: 0 },
+          returnedBorrowings: { type: 'integer', minimum: 0 },
+          currentBorrowings: { type: 'integer', minimum: 0 },
+          dueSoonBorrowings: { type: 'integer', minimum: 0 },
+        },
+      },
+      DashboardStats: {
+        oneOf: [
+          { $ref: '#/components/schemas/AdminDashboardStats' },
+          { $ref: '#/components/schemas/UserDashboardStats' },
+        ],
+        discriminator: {
+          propertyName: 'role',
+        },
+      },
     },
   },
   paths: {
@@ -409,6 +475,26 @@ export const openApiSpec = {
           },
           401: { description: 'Missing or invalid token' },
           404: { description: 'User not found' },
+        },
+      },
+    },
+    '/api/dashboard/stats': {
+      get: {
+        tags: ['Dashboard'],
+        summary: 'Get dashboard statistics',
+        description:
+          'Returns library-wide stats for admins and personal borrowing stats for regular users.',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: 'Dashboard stats returned',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/DashboardStats' },
+              },
+            },
+          },
+          401: { description: 'Missing or invalid token' },
         },
       },
     },
